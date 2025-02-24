@@ -25,10 +25,10 @@ redisClient.on("reconnecting", () => console.log("Redis reconnecting..."));
 redisClient.on("ready", () => console.log("Redis connection restored"));
 
 let parkingLots = {
-  lotA: { filled: 0, name: "Lot A", max: 10, section: "North Side" },
-  lotB: { filled: 0, name: "Lot B", max: 10, section: "North Side" },
-  lotC: { filled: 0, name: "Lot C", max: 10, section: "South Side" },
-  lotD: { filled: 0, name: "Lot D", max: 10, section: "South Side" },
+  lotA: { filled: 0, name: "Lot A", max: 10, group: "Group A" },
+  lotB: { filled: 0, name: "Lot B", max: 10, group: "Group A" },
+  lotC: { filled: 0, name: "Lot C", max: 10, group: "Group B" },
+  lotD: { filled: 0, name: "Lot D", max: 10, group: "Group C" },
 };
 
 async function saveState() {
@@ -95,14 +95,14 @@ io.on("connection", (socket) => {
 
   socket.on("addLot", (data) => {
     const newLotId = getNextLotId();
-    const section = data && data.section ? data.section : "Ungrouped";
+    const group = data && data.group ? data.group : "Group A"; // Default to Group A if no group specified
     parkingLots[newLotId] = {
       filled: 0,
       name: `Lot ${newLotId.charAt(3)}`,
       max: 10,
-      section,
+      group,
     };
-    console.log("Adding lot:", newLotId, "to section:", section);
+    console.log("Adding lot:", newLotId, "to group:", group);
     io.emit("addLot", parkingLots);
     saveState();
   });

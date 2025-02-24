@@ -12,7 +12,7 @@ socket.on("connect", () => console.log("Socket connected to server"));
 socket.on("disconnect", () => console.log("Socket disconnected from server"));
 
 // Render a single lot
-function renderLot(lotId, name, filled, max, index, totalLotsInSection) {
+function renderLot(lotId, name, filled, max, index, totalLotsInGroup) {
   return `
     <div class="lot">
       <div class="name-container">
@@ -20,7 +20,7 @@ function renderLot(lotId, name, filled, max, index, totalLotsInSection) {
           <span class="arrow-icon left-arrow ${index === 0 ? "disabled" : ""}" onclick="moveLotUp('${lotId}')">◄</span>
           <span id="name${lotId}" class="lot-name">${name}</span>
           <span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span>
-          <span class="arrow-icon right-arrow ${index === totalLotsInSection - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
+          <span class="arrow-icon right-arrow ${index === totalLotsInGroup - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
         </h3>
       </div>
       <div class="max-container">
@@ -42,54 +42,54 @@ function renderLot(lotId, name, filled, max, index, totalLotsInSection) {
   `;
 }
 
-// Render all lots grouped by sections
+// Render all lots grouped by groups
 function renderLots(lots) {
   console.log("Rendering lots:", lots);
   lotsContainer.innerHTML = "";
 
-  // Group lots by section
-  const sections = {};
+  // Group lots by group
+  const groups = {};
   Object.entries(lots).forEach(([lotId, lot]) => {
-    const sectionName = lot.section || "Ungrouped";
-    if (!sections[sectionName]) sections[sectionName] = [];
-    sections[sectionName].push({ lotId, ...lot });
+    const groupName = lot.group;
+    if (!groups[groupName]) groups[groupName] = [];
+    groups[groupName].push({ lotId, ...lot });
   });
 
-  // Render each section
-  Object.entries(sections).forEach(([sectionName, sectionLots]) => {
-    const sectionDiv = document.createElement("div");
-    sectionDiv.className = "section";
-    sectionDiv.innerHTML = `
-      <div class="section-header">
-        <span class="collapse-toggle" onclick="toggleSection(this)">▼</span>
-        <span class="section-name" id="section-${sectionName}">${sectionName}</span>
-        <span class="edit-icon" id="editSectionIcon-${sectionName}" onclick="editSectionName('${sectionName}')">✎</span>
+  // Render each group
+  Object.entries(groups).forEach(([groupName, groupLots]) => {
+    const groupDiv = document.createElement("div");
+    groupDiv.className = "group";
+    groupDiv.innerHTML = `
+      <div class="group-header">
+        <span class="collapse-toggle" onclick="toggleGroup(this)">▼</span>
+        <span class="group-name" id="group-${groupName}">${groupName}</span>
+        <span class="edit-icon" id="editGroupIcon-${groupName}" onclick="editGroupName('${groupName}')">✎</span>
       </div>
-      <div class="section-lots">
-        ${sectionLots.map((lot, index) => renderLot(lot.lotId, lot.name, lot.filled, lot.max, index, sectionLots.length)).join("")}
-        <button class="add-lot-btn" onclick="addLotToSection('${sectionName}')">Add New Lot</button>
+      <div class="group-lots">
+        ${groupLots.map((lot, index) => renderLot(lot.lotId, lot.name, lot.filled, lot.max, index, groupLots.length)).join("")}
+        <button class="add-lot-btn" onclick="addLotToGroup('${groupName}')">Add New Lot</button>
       </div>
     `;
-    lotsContainer.appendChild(sectionDiv);
+    lotsContainer.appendChild(groupDiv);
   });
 
   updateFullPercentage(lots);
-  console.log("Lots rendered, sections:", Object.keys(sections));
+  console.log("Lots rendered, groups:", Object.keys(groups));
 }
 
-// Toggle section collapse
-function toggleSection(toggle) {
-  const sectionLots = toggle.parentElement.nextElementSibling;
-  const isCollapsed = sectionLots.style.display === "none";
-  sectionLots.style.display = isCollapsed ? "block" : "none";
+// Toggle group collapse
+function toggleGroup(toggle) {
+  const groupLots = toggle.parentElement.nextElementSibling;
+  const isCollapsed = groupLots.style.display === "none";
+  groupLots.style.display = isCollapsed ? "block" : "none";
   toggle.textContent = isCollapsed ? "▼" : "▲";
 }
 
-// Edit section name
-function editSectionName(sectionName) {
-  const sectionSpan = document.getElementById(`section-${sectionName}`);
-  const editIcon = document.getElementById(`editSectionIcon-${sectionName}`);
-  const currentName = sectionSpan.textContent;
+// Edit group name
+function editGroupName(groupName) {
+  const groupSpan = document.getElementById(`group-${groupName}`);
+  const editIcon = document.getElementById(`editGroupIcon-${groupName}`);
+  const currentName = groupSpan.textContent;
   const input = document.createElement("input");
   input.type = "text";
   input.className = "edit-input";
@@ -97,14 +97,14 @@ function editSectionName(sectionName) {
   input.onblur = () => {
     const newName = input.value.trim() || currentName;
     const newSpan = document.createElement("span");
-    newSpan.id = `section-${newName}`;
-    newSpan.className = "section-name";
+    newSpan.id = `group-${newName}`;
+    newSpan.className = "group-name";
     newSpan.textContent = newName;
     input.parentNode.replaceChild(newSpan, input);
     editIcon.style.display = "inline";
     const lots = getCurrentLots();
     Object.values(lots).forEach((lot) => {
-      if (lot.section === sectionName) lot.section = newName;
+      if (lot.group === groupName) lot.group = newName;
     });
     const newLots = {};
     Object.entries(lots).forEach(([lotId, lot]) => (newLots[lotId] = lot));
@@ -114,24 +114,28 @@ function editSectionName(sectionName) {
   input.onkeypress = (e) => {
     if (e.key === "Enter") input.blur();
   };
-  sectionSpan.parentNode.replaceChild(input, sectionSpan);
+  groupSpan.parentNode.replaceChild(input, groupSpan);
   editIcon.style.display = "none";
   input.focus();
 }
 
-// Add lot to a specific section
-function addLotToSection(sectionName) {
-  socket.emit("addLot", { section: sectionName });
+// Add lot to a specific group
+function addLotToGroup(groupName) {
+  socket.emit("addLot", { group: groupName });
 }
 
-// Add a new section
-function addSection() {
-  const newSectionName = prompt("Enter new section name:");
-  if (newSectionName && newSectionName.trim()) {
-    const lots = getCurrentLots();
-    // Create a new lot in the new section to ensure it appears
-    socket.emit("addLot", { section: newSectionName.trim() });
+// Add a new group with next letter
+function addGroup() {
+  const lots = getCurrentLots();
+  const existingGroups = [
+    ...new Set(Object.values(lots).map((lot) => lot.group)),
+  ];
+  let nextChar = "A";
+  while (existingGroups.includes(`Group ${nextChar}`)) {
+    nextChar = String.fromCharCode(nextChar.charCodeAt(0) + 1);
   }
+  const newGroupName = `Group ${nextChar}`;
+  socket.emit("addLot", { group: newGroupName });
 }
 
 // Update full lot percentage
@@ -299,11 +303,6 @@ function moveLotDown(lotId) {
   }
 }
 
-// Add a new lot
-function addLot() {
-  socket.emit("addLot");
-}
-
 // Remove a lot
 function removeLot(lotId) {
   socket.emit("removeLot", { lot: lotId });
@@ -357,13 +356,13 @@ function getCurrentLots() {
   const lots = {};
   document.querySelectorAll(".lot").forEach((lotDiv) => {
     const lotId = lotDiv.querySelector('[id^="name"]').id.replace("name", "");
-    const sectionDiv = lotDiv.closest(".section");
-    const sectionName = sectionDiv.querySelector(".section-name").textContent;
+    const groupDiv = lotDiv.closest(".group");
+    const groupName = groupDiv.querySelector(".group-name").textContent;
     lots[lotId] = {
       name: document.getElementById(`name${lotId}`).textContent,
       filled: parseInt(document.getElementById(lotId).textContent),
       max: parseInt(document.getElementById(`max${lotId}`).textContent),
-      section: sectionName,
+      group: groupName,
     };
   });
   return lots;

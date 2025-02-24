@@ -8,7 +8,7 @@ body {
   justify-content: space-around;
   flex-wrap: wrap;
 }
-.section {
+.group {
   border: 1px solid #ccc;
   padding: 10px;
   margin: 10px;
@@ -16,14 +16,14 @@ body {
   text-align: center;
   background-color: #f9f9f9;
 }
-.section-header {
+.group-header {
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 5px;
 }
-.section-name {
+.group-name {
   font-size: 18px;
   font-weight: bold;
   margin: 0 10px;
@@ -32,7 +32,7 @@ body {
   font-size: 14px;
   margin-right: 5px;
 }
-.section-lots {
+.group-lots {
   margin-top: 10px;
 }
 .lot {
@@ -76,7 +76,7 @@ button {
   text-align: center;
   margin-top: 20px;
 }
-#add-section-btn,
+#add-group-btn,
 .add-lot-btn {
   font-size: 14px;
   padding: 6px 12px;
