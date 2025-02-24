@@ -114,7 +114,7 @@ function editGroupName(groupName) {
     socket.emit("reorder", newLots);
     renderLots(newLots);
   };
-  input.onkeypress = (e) => {
+  input.onkeydown = (e) => {
     if (e.key === "Enter") input.blur();
   };
   groupSpan.parentNode.replaceChild(input, groupSpan);
@@ -170,7 +170,7 @@ function editName(lotId) {
     input.parentNode.replaceChild(newSpan, input);
     socket.emit("rename", { lot: lotId, name: newName });
   };
-  input.onkeypress = (e) => {
+  input.onkeydown = (e) => {
     if (e.key === "Enter") input.blur();
   };
   nameSpan.parentNode.replaceChild(input, nameSpan);
@@ -202,7 +202,7 @@ function editSpaces(lotId) {
     input.parentNode.replaceChild(newSpan, input);
     socket.emit("update", { lot: lotId, filled: newFilled });
   };
-  input.onkeypress = (e) => {
+  input.onkeydown = (e) => {
     if (e.key === "Enter") input.blur();
   };
   filledSpan.parentNode.replaceChild(input, filledSpan);
@@ -228,7 +228,7 @@ function editMax(lotId) {
     input.parentNode.replaceChild(newSpan, input);
     socket.emit("updateMax", { lot: lotId, max: newMax });
   };
-  input.onkeypress = (e) => {
+  input.onkeydown = (e) => {
     if (e.key === "Enter") input.blur();
   };
   maxSpan.parentNode.replaceChild(input, maxSpan);
@@ -316,7 +316,7 @@ socket.on("update", (data) => {
   const filledElement = document.getElementById(data.lot);
   if (filledElement && filledElement.tagName !== "INPUT") {
     filledElement.textContent = data.filled;
-    updateFullPercentage(getCurrentLots());
+    renderLots(getCurrentLots());
   }
 });
 
