@@ -13,6 +13,7 @@ body {
   padding: 20px;
   margin: 10px;
   width: 220px;
+  text-align: center;
 }
 button {
   font-size: 24px;
@@ -21,12 +22,18 @@ button {
   min-width: 60px;
   border-radius: 8px;
   cursor: pointer;
+  background-color: #f0f0f0; /* Light gray for main buttons */
+  border: 1px solid #ccc;
 }
-input[type="number"] {
-  width: 80px;
-  padding: 8px;
+.remove-button {
+  font-size: 14px; /* Smaller text */
+  padding: 6px 12px; /* Reduced padding */
   margin: 8px;
-  font-size: 16px;
+  min-width: 0; /* Allow it to shrink */
+  background-color: #fff; /* White to blend in */
+  border: 1px solid #ddd; /* Lighter border */
+  color: #666; /* Muted text color */
+  border-radius: 4px; /* Slightly smaller radius */
 }
 .edit-icon {
   font-size: 16px;
@@ -41,6 +48,26 @@ input[type="number"] {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-h2 {
-  display: inline; /* Keeps name and icon on same line */
+.edit-input-number {
+  width: 80px;
+  padding: 4px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+h2,
+p {
+  margin: 10px 0;
+  display: block;
+}
+.name-container,
+.spaces-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }

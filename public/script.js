@@ -6,13 +6,17 @@ function renderLot(lotId, name, spaces) {
   const lotDiv = document.createElement("div");
   lotDiv.className = "lot";
   lotDiv.innerHTML = `
-        <h2><span id="name${lotId}">${name}</span><span class="edit-icon" onclick="editName('${lotId}')">✎</span></h2>
-        <p>Empty Spaces: <span id="${lotId}">${spaces}</span></p>
-        <button onclick="updateSpaces('${lotId}', 1)">+</button>
-        <button onclick="updateSpaces('${lotId}', -1)">-</button>
-        <input type="number" id="set${lotId}" min="0" placeholder="Set spaces">
-        <button onclick="setSpaces('${lotId}')">Set</button>
-        <button onclick="removeLot('${lotId}')">Remove</button>
+        <div class="name-container">
+            <h2><span id="name${lotId}">${name}</span><span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span></h2>
+        </div>
+        <div class="spaces-container">
+            <p>Empty Spaces: <span id="${lotId}">${spaces}</span><span class="edit-icon" id="editSpacesIcon${lotId}" onclick="editSpaces('${lotId}')">✎</span></p>
+        </div>
+        <div class="button-group">
+            <button onclick="updateSpaces('${lotId}', 1)">+</button>
+            <button onclick="updateSpaces('${lotId}', -1)">-</button>
+        </div>
+        <button class="remove-button" onclick="removeLot('${lotId}')">Remove</button>
     `;
   lotsContainer.appendChild(lotDiv);
 }
@@ -28,6 +32,7 @@ function renderLots(lots) {
 // Edit lot name
 function editName(lotId) {
   const nameSpan = document.getElementById(`name${lotId}`);
+  const editIcon = document.getElementById(`editNameIcon${lotId}`);
   const currentName = nameSpan.textContent;
   const input = document.createElement("input");
   input.type = "text";
@@ -35,20 +40,45 @@ function editName(lotId) {
   input.value = currentName;
   input.onblur = () => {
     const newName = input.value.trim() || lotId.toUpperCase();
-    // Replace input with span locally first
     const newSpan = document.createElement("span");
     newSpan.id = `name${lotId}`;
     newSpan.textContent = newName;
     input.parentNode.replaceChild(newSpan, input);
-    // Then send to server
+    editIcon.style.display = "inline";
     socket.emit("rename", { lot: lotId, name: newName });
   };
   input.onkeypress = (e) => {
-    if (e.key === "Enter") {
-      input.blur(); // Trigger blur to save
-    }
+    if (e.key === "Enter") input.blur();
   };
   nameSpan.parentNode.replaceChild(input, nameSpan);
+  editIcon.style.display = "none";
+  input.focus();
+}
+
+// Edit lot spaces
+function editSpaces(lotId) {
+  const spacesSpan = document.getElementById(lotId);
+  const editIcon = document.getElementById(`editSpacesIcon${lotId}`);
+  const currentSpaces = parseInt(spacesSpan.textContent);
+  const input = document.createElement("input");
+  input.type = "number";
+  input.className = "edit-input-number";
+  input.value = currentSpaces;
+  input.min = "0";
+  input.onblur = () => {
+    const newSpaces = Math.max(0, parseInt(input.value) || 0);
+    const newSpan = document.createElement("span");
+    newSpan.id = lotId;
+    newSpan.textContent = newSpaces;
+    input.parentNode.replaceChild(newSpan, input);
+    editIcon.style.display = "inline";
+    socket.emit("update", { lot: lotId, spaces: newSpaces });
+  };
+  input.onkeypress = (e) => {
+    if (e.key === "Enter") input.blur();
+  };
+  spacesSpan.parentNode.replaceChild(input, spacesSpan);
+  editIcon.style.display = "none";
   input.focus();
 }
 
@@ -57,14 +87,6 @@ function updateSpaces(lotId, change) {
   const currentSpaces = parseInt(document.getElementById(lotId).textContent);
   const newSpaces = Math.max(0, currentSpaces + change);
   socket.emit("update", { lot: lotId, spaces: newSpaces });
-}
-
-// Set spaces manually
-function setSpaces(lotId) {
-  const input = document.getElementById(`set${lotId}`);
-  const newSpaces = Math.max(0, parseInt(input.value) || 0);
-  socket.emit("update", { lot: lotId, spaces: newSpaces });
-  input.value = "";
 }
 
 // Reset all to max
@@ -88,13 +110,15 @@ socket.on("state", (lots) => {
 });
 
 socket.on("update", (data) => {
-  document.getElementById(data.lot).textContent = data.spaces;
+  const spacesElement = document.getElementById(data.lot);
+  if (spacesElement && spacesElement.tagName !== "INPUT") {
+    spacesElement.textContent = data.spaces;
+  }
 });
 
 socket.on("rename", (data) => {
   const nameElement = document.getElementById(`name${data.lot}`);
   if (nameElement && nameElement.tagName !== "INPUT") {
-    // Only update if not currently editing
     nameElement.textContent = data.name;
   }
 });
