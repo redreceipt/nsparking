@@ -15,33 +15,51 @@ let parkingLots = {
   lotD: { spaces: 10, name: "Lot D" },
 };
 
+function getNextLotId() {
+  const existingIds = Object.keys(parkingLots);
+  let nextChar = "A";
+  while (existingIds.includes(`lot${nextChar}`)) {
+    nextChar = String.fromCharCode(nextChar.charCodeAt(0) + 1);
+  }
+  return `lot${nextChar}`;
+}
+
 io.on("connection", (socket) => {
   console.log("A user connected");
-  socket.emit("update", { lot: "lotA", spaces: parkingLots.lotA.spaces });
-  socket.emit("update", { lot: "lotB", spaces: parkingLots.lotB.spaces });
-  socket.emit("update", { lot: "lotC", spaces: parkingLots.lotC.spaces });
-  socket.emit("update", { lot: "lotD", spaces: parkingLots.lotD.spaces });
-  socket.emit("rename", { lot: "lotA", name: parkingLots.lotA.name });
-  socket.emit("rename", { lot: "lotB", name: parkingLots.lotB.name });
-  socket.emit("rename", { lot: "lotC", name: parkingLots.lotC.name });
-  socket.emit("rename", { lot: "lotD", name: parkingLots.lotD.name });
+  socket.emit("state", parkingLots);
 
   socket.on("update", (data) => {
-    parkingLots[data.lot].spaces = data.spaces;
-    io.emit("update", data);
+    if (parkingLots[data.lot]) {
+      parkingLots[data.lot].spaces = data.spaces;
+      io.emit("update", data);
+    }
   });
 
-  socket.on("reset", (data) => {
-    parkingLots.lotA.spaces = data.lotA;
-    parkingLots.lotB.spaces = data.lotB;
-    parkingLots.lotC.spaces = data.lotC;
-    parkingLots.lotD.spaces = data.lotD;
-    io.emit("reset", data);
+  socket.on("reset", () => {
+    Object.keys(parkingLots).forEach((lot) => {
+      parkingLots[lot].spaces = 10; // Default max
+    });
+    io.emit("reset", parkingLots);
   });
 
   socket.on("rename", (data) => {
-    parkingLots[data.lot].name = data.name;
-    io.emit("rename", data);
+    if (parkingLots[data.lot]) {
+      parkingLots[data.lot].name = data.name;
+      io.emit("rename", data);
+    }
+  });
+
+  socket.on("addLot", () => {
+    const newLotId = getNextLotId();
+    parkingLots[newLotId] = { spaces: 10, name: `Lot ${newLotId.charAt(3)}` };
+    io.emit("addLot", parkingLots);
+  });
+
+  socket.on("removeLot", (data) => {
+    if (parkingLots[data.lot]) {
+      delete parkingLots[data.lot];
+      io.emit("removeLot", parkingLots);
+    }
   });
 
   socket.on("disconnect", () => {

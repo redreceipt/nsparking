@@ -29,7 +29,7 @@ input[type="number"] {
   font-size: 16px;
 }
 input[type="text"] {
-  width: 120px; /* Wider for text input */
+  width: 120px;
   padding: 8px;
   margin: 8px;
   font-size: 16px;
