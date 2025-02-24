@@ -6,9 +6,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static("public")); // Serve HTML, CSS, JS files from 'public' folder
+// Serve static files from 'public' folder
+app.use(express.static("public"));
 
-// Initial parking lot data
+// Parking lot data
 let parkingLots = {
   lotA: 10,
   lotB: 10,
@@ -16,17 +17,17 @@ let parkingLots = {
   lotD: 10,
 };
 
+// Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("A user connected");
-  // Send current state to new user
   socket.emit("update", { lot: "lotA", spaces: parkingLots.lotA });
   socket.emit("update", { lot: "lotB", spaces: parkingLots.lotB });
   socket.emit("update", { lot: "lotC", spaces: parkingLots.lotC });
   socket.emit("update", { lot: "lotD", spaces: parkingLots.lotD });
 
   socket.on("update", (data) => {
-    parkingLots[data.lot] = data.spaces; // Update server state
-    io.emit("update", data); // Broadcast to all clients
+    parkingLots[data.lot] = data.spaces;
+    io.emit("update", data);
   });
 
   socket.on("disconnect", () => {
@@ -34,7 +35,8 @@ io.on("connection", (socket) => {
   });
 });
 
+// Start server on dynamic port
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
