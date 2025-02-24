@@ -11,58 +11,127 @@ console.log("DOM elements loaded:", lotsContainer, fullPercentageSpan);
 socket.on("connect", () => console.log("Socket connected to server"));
 socket.on("disconnect", () => console.log("Socket disconnected from server"));
 
-// Render a single lot with reorder arrows as icons
-function renderLot(lotId, name, filled, max, index, totalLots) {
-  console.log(
-    `Rendering lot ${lotId}: ${name}, ${filled}/${max}, index: ${index}`,
-  );
-  const lotDiv = document.createElement("div");
-  lotDiv.className = "lot";
-  lotDiv.innerHTML = `
-        <div class="name-container">
-            <h2>
-              <span class="arrow-icon left-arrow ${index === 0 ? "disabled" : ""}" onclick="moveLotUp('${lotId}')">◄</span>
-              <span class="lot-name" id="name${lotId}">${name}</span>
-              <span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span>
-              <span class="arrow-icon right-arrow ${index === totalLots - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
-            </h2>
-        </div>
-        <div class="max-container">
-            <p>Max Capacity: <span id="max${lotId}">${max}</span><span class="edit-icon" id="editMaxIcon${lotId}" onclick="editMax('${lotId}')">✎</span></p>
-        </div>
-        <div class="spaces-container">
-            <p class="filled-spaces">Filled Spaces: <span id="${lotId}">${filled}</span><span class="edit-icon" id="editSpacesIcon${lotId}" onclick="editSpaces('${lotId}')">✎</span></p>
-        </div>
-        <div class="button-group">
-            <button onclick="updateSpaces('${lotId}', 1)">+</button>
-            <button onclick="updateSpaces('${lotId}', -1)">-</button>
-        </div>
-        <div class="shortcut-buttons">
-            <button class="shortcut-button" onclick="setFull('${lotId}')">Full</button>
-            <button class="shortcut-button" onclick="setEmpty('${lotId}')">Empty</button>
-        </div>
-        <button class="remove-button" onclick="removeLot('${lotId}')">Remove</button>
-    `;
-  lotsContainer.appendChild(lotDiv);
+// Render a single lot
+function renderLot(lotId, name, filled, max, index, totalLotsInSection) {
+  return `
+    <div class="lot">
+      <div class="name-container">
+        <h3>
+          <span class="arrow-icon left-arrow ${index === 0 ? "disabled" : ""}" onclick="moveLotUp('${lotId}')">◄</span>
+          <span id="name${lotId}" class="lot-name">${name}</span>
+          <span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span>
+          <span class="arrow-icon right-arrow ${index === totalLotsInSection - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
+        </h3>
+      </div>
+      <div class="max-container">
+        <p>Max Capacity: <span id="max${lotId}">${max}</span><span class="edit-icon" id="editMaxIcon${lotId}" onclick="editMax('${lotId}')">✎</span></p>
+      </div>
+      <div class="spaces-container">
+        <p class="filled-spaces">Filled Spaces: <span id="${lotId}">${filled}</span><span class="edit-icon" id="editSpacesIcon${lotId}" onclick="editSpaces('${lotId}')">✎</span></p>
+      </div>
+      <div class="button-group">
+        <button onclick="updateSpaces('${lotId}', 1)">+</button>
+        <button onclick="updateSpaces('${lotId}', -1)">-</button>
+      </div>
+      <div class="shortcut-buttons">
+        <button class="shortcut-button" onclick="setFull('${lotId}')">Full</button>
+        <button class="shortcut-button" onclick="setEmpty('${lotId}')">Empty</button>
+      </div>
+      <button class="remove-button" onclick="removeLot('${lotId}')">Remove</button>
+    </div>
+  `;
 }
 
-// Clear and re-render all lots
+// Render all lots grouped by sections
 function renderLots(lots) {
   console.log("Rendering lots:", lots);
   lotsContainer.innerHTML = "";
-  const lotIds = Object.keys(lots);
-  lotIds.forEach((lotId, index) => {
-    renderLot(
-      lotId,
-      lots[lotId].name,
-      lots[lotId].filled,
-      lots[lotId].max,
-      index,
-      lotIds.length,
-    );
+
+  // Group lots by section
+  const sections = {};
+  Object.entries(lots).forEach(([lotId, lot]) => {
+    const sectionName = lot.section || "Ungrouped";
+    if (!sections[sectionName]) sections[sectionName] = [];
+    sections[sectionName].push({ lotId, ...lot });
   });
+
+  // Render each section
+  Object.entries(sections).forEach(([sectionName, sectionLots]) => {
+    const sectionDiv = document.createElement("div");
+    sectionDiv.className = "section";
+    sectionDiv.innerHTML = `
+      <div class="section-header">
+        <span class="collapse-toggle" onclick="toggleSection(this)">▼</span>
+        <span class="section-name" id="section-${sectionName}">${sectionName}</span>
+        <span class="edit-icon" id="editSectionIcon-${sectionName}" onclick="editSectionName('${sectionName}')">✎</span>
+      </div>
+      <div class="section-lots">
+        ${sectionLots.map((lot, index) => renderLot(lot.lotId, lot.name, lot.filled, lot.max, index, sectionLots.length)).join("")}
+        <button class="add-lot-btn" onclick="addLotToSection('${sectionName}')">Add New Lot</button>
+      </div>
+    `;
+    lotsContainer.appendChild(sectionDiv);
+  });
+
   updateFullPercentage(lots);
-  console.log("Lots rendered, current order:", lotIds);
+  console.log("Lots rendered, sections:", Object.keys(sections));
+}
+
+// Toggle section collapse
+function toggleSection(toggle) {
+  const sectionLots = toggle.parentElement.nextElementSibling;
+  const isCollapsed = sectionLots.style.display === "none";
+  sectionLots.style.display = isCollapsed ? "block" : "none";
+  toggle.textContent = isCollapsed ? "▼" : "▲";
+}
+
+// Edit section name
+function editSectionName(sectionName) {
+  const sectionSpan = document.getElementById(`section-${sectionName}`);
+  const editIcon = document.getElementById(`editSectionIcon-${sectionName}`);
+  const currentName = sectionSpan.textContent;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "edit-input";
+  input.value = currentName;
+  input.onblur = () => {
+    const newName = input.value.trim() || currentName;
+    const newSpan = document.createElement("span");
+    newSpan.id = `section-${newName}`;
+    newSpan.className = "section-name";
+    newSpan.textContent = newName;
+    input.parentNode.replaceChild(newSpan, input);
+    editIcon.style.display = "inline";
+    const lots = getCurrentLots();
+    Object.values(lots).forEach((lot) => {
+      if (lot.section === sectionName) lot.section = newName;
+    });
+    const newLots = {};
+    Object.entries(lots).forEach(([lotId, lot]) => (newLots[lotId] = lot));
+    socket.emit("reorder", newLots);
+    renderLots(newLots);
+  };
+  input.onkeypress = (e) => {
+    if (e.key === "Enter") input.blur();
+  };
+  sectionSpan.parentNode.replaceChild(input, sectionSpan);
+  editIcon.style.display = "none";
+  input.focus();
+}
+
+// Add lot to a specific section
+function addLotToSection(sectionName) {
+  socket.emit("addLot", { section: sectionName });
+}
+
+// Add a new section
+function addSection() {
+  const newSectionName = prompt("Enter new section name:");
+  if (newSectionName && newSectionName.trim()) {
+    const lots = getCurrentLots();
+    // Create a new lot in the new section to ensure it appears
+    socket.emit("addLot", { section: newSectionName.trim() });
+  }
 }
 
 // Update full lot percentage
@@ -90,7 +159,7 @@ function editName(lotId) {
     const newName = input.value.trim() || lotId.toUpperCase();
     const newSpan = document.createElement("span");
     newSpan.id = `name${lotId}`;
-    newSpan.className = "lot-name"; // Keep class for styling
+    newSpan.className = "lot-name";
     newSpan.textContent = newName;
     input.parentNode.replaceChild(newSpan, input);
     editIcon.style.display = "inline";
@@ -255,7 +324,7 @@ socket.on("update", (data) => {
 });
 
 socket.on("rename", (data) => {
-  const nameElement = document.getElementById(`name${data.lot}`); // Fixed typo: lotId → data.lot
+  const nameElement = document.getElementById(`name${data.lot}`);
   if (nameElement && nameElement.tagName !== "INPUT") {
     nameElement.textContent = data.name;
   }
@@ -288,10 +357,13 @@ function getCurrentLots() {
   const lots = {};
   document.querySelectorAll(".lot").forEach((lotDiv) => {
     const lotId = lotDiv.querySelector('[id^="name"]').id.replace("name", "");
+    const sectionDiv = lotDiv.closest(".section");
+    const sectionName = sectionDiv.querySelector(".section-name").textContent;
     lots[lotId] = {
       name: document.getElementById(`name${lotId}`).textContent,
       filled: parseInt(document.getElementById(lotId).textContent),
       max: parseInt(document.getElementById(`max${lotId}`).textContent),
+      section: sectionName,
     };
   });
   return lots;

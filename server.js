@@ -25,10 +25,10 @@ redisClient.on("reconnecting", () => console.log("Redis reconnecting..."));
 redisClient.on("ready", () => console.log("Redis connection restored"));
 
 let parkingLots = {
-  lotA: { filled: 0, name: "Lot A", max: 10 },
-  lotB: { filled: 0, name: "Lot B", max: 10 },
-  lotC: { filled: 0, name: "Lot C", max: 10 },
-  lotD: { filled: 0, name: "Lot D", max: 10 },
+  lotA: { filled: 0, name: "Lot A", max: 10, section: "North Side" },
+  lotB: { filled: 0, name: "Lot B", max: 10, section: "North Side" },
+  lotC: { filled: 0, name: "Lot C", max: 10, section: "South Side" },
+  lotD: { filled: 0, name: "Lot D", max: 10, section: "South Side" },
 };
 
 async function saveState() {
@@ -52,6 +52,8 @@ function getNextLotId() {
 io.on("connection", (socket) => {
   console.log("A user connected, emitting state:", parkingLots);
   socket.emit("state", parkingLots);
+
+  socket.on("message", (msg) => console.log("Received raw message:", msg));
 
   socket.on("update", (data) => {
     if (parkingLots[data.lot]) {
@@ -91,14 +93,16 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("addLot", () => {
+  socket.on("addLot", (data) => {
     const newLotId = getNextLotId();
+    const section = data && data.section ? data.section : "Ungrouped";
     parkingLots[newLotId] = {
       filled: 0,
       name: `Lot ${newLotId.charAt(3)}`,
       max: 10,
+      section,
     };
-    console.log("Adding lot:", newLotId);
+    console.log("Adding lot:", newLotId, "to section:", section);
     io.emit("addLot", parkingLots);
     saveState();
   });

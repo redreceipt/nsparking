@@ -8,12 +8,35 @@ body {
   justify-content: space-around;
   flex-wrap: wrap;
 }
-.lot {
+.section {
   border: 1px solid #ccc;
-  padding: 20px;
+  padding: 10px;
   margin: 10px;
-  width: 220px;
+  width: 240px;
   text-align: center;
+  background-color: #f9f9f9;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 5px;
+}
+.section-name {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 10px;
+}
+.collapse-toggle {
+  font-size: 14px;
+  margin-right: 5px;
+}
+.section-lots {
+  margin-top: 10px;
+}
+.lot {
+  padding: 10px 0;
 }
 button {
   font-size: 24px;
@@ -53,10 +76,11 @@ button {
   text-align: center;
   margin-top: 20px;
 }
-#add-lot-btn {
+#add-section-btn,
+.add-lot-btn {
   font-size: 14px;
   padding: 6px 12px;
-  margin: 0;
+  margin: 8px 0;
   min-width: 0;
   background-color: #fff;
   border: 1px solid #ddd;
@@ -64,31 +88,31 @@ button {
   border-radius: 4px;
 }
 .name-container {
-  position: relative; /* Anchor arrows relative to this */
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 24px; /* Ensure height for arrows */
+  min-height: 24px;
 }
 .lot-name {
-  max-width: 140px; /* Limit name width to fit arrows */
+  max-width: 140px;
   overflow: hidden;
-  text-overflow: ellipsis; /* Truncate long names */
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .arrow-icon {
   font-size: 12px;
   color: #888;
   cursor: pointer;
-  position: absolute; /* Fix position */
+  position: absolute;
   top: 50%;
-  transform: translateY(-50%); /* Center vertically */
+  transform: translateY(-50%);
 }
 .arrow-icon.left-arrow {
-  left: 0; /* Anchor to left edge */
+  left: 0;
 }
 .arrow-icon.right-arrow {
-  right: 0; /* Anchor to right edge */
+  right: 0;
 }
 .arrow-icon.disabled {
   color: #ccc;
@@ -115,6 +139,7 @@ button {
   border-radius: 4px;
 }
 h2,
+h3,
 p {
   margin: 10px 0;
   display: block;
