@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Church Parking Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <h1>Parking Lot Tracker</h1>
+    <div id="lots">
+      <div class="lot">
+        <h2>Lot A</h2>
+        <p>Empty Spaces: <span id="lotA">10</span></p>
+        <button onclick="updateSpaces('lotA', 1)">+</button>
+        <button onclick="updateSpaces('lotA', -1)">-</button>
+      </div>
+      <div class="lot">
+        <h2>Lot B</h2>
+        <p>Empty Spaces: <span id="lotB">10</span></p>
+        <button onclick="updateSpaces('lotB', 1)">+</button>
+        <button onclick="updateSpaces('lotB', -1)">-</button>
+      </div>
+      <div class="lot">
+        <h2>Lot C</h2>
+        <p>Empty Spaces: <span id="lotC">10</span></p>
+        <button onclick="updateSpaces('lotC', 1)">+</button>
+        <button onclick="updateSpaces('lotC', -1)">-</button>
+      </div>
+      <div class="lot">
+        <h2>Lot D</h2>
+        <p>Empty Spaces: <span id="lotD">10</span></p>
+        <button onclick="updateSpaces('lotD', 1)">+</button>
+        <button onclick="updateSpaces('lotD', -1)">-</button>
+      </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
