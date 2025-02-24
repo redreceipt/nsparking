@@ -331,7 +331,7 @@ socket.on("updateMax", (data) => {
   const maxElement = document.getElementById(`max${data.lot}`);
   if (maxElement && maxElement.tagName !== "INPUT") {
     maxElement.textContent = data.max;
-    updateFullPercentage(getCurrentLots());
+    renderLots(getCurrentLots());
   }
 });
 
