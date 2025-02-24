@@ -20,22 +20,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  padding: 5px;
+  padding: 5px; /* No cursor here, let children define it */
 }
 .group-name {
   font-size: 18px;
   font-weight: bold;
-  margin: 0 5px; /* Adjusted for tighter fit */
+  margin: 0 5px;
+  cursor: pointer; /* Pointer only on group name */
 }
 .group-capacity {
   font-size: 14px;
-  color: #666; /* Subtle gray */
+  color: #666;
   margin-left: 5px;
+  cursor: default; /* Explicitly default for capacity */
 }
 .collapse-toggle {
   font-size: 14px;
   margin-right: 5px;
+  cursor: pointer; /* Pointer only on toggle */
 }
 .group-lots {
   margin-top: 10px;
@@ -123,11 +125,8 @@ button {
   color: #ccc;
   cursor: not-allowed;
 }
-.edit-icon {
-  font-size: 16px;
-  margin-left: 8px;
+.editable {
   cursor: pointer;
-  vertical-align: middle;
 }
 .edit-input {
   width: 120px;

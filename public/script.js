@@ -18,16 +18,15 @@ function renderLot(lotId, name, filled, max, index, totalLotsInGroup) {
       <div class="name-container">
         <h3>
           <span class="arrow-icon left-arrow ${index === 0 ? "disabled" : ""}" onclick="moveLotUp('${lotId}')">◄</span>
-          <span id="name${lotId}" class="lot-name">${name}</span>
-          <span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span>
+          <span id="name${lotId}" class="lot-name editable" onclick="editName('${lotId}')">${name}</span>
           <span class="arrow-icon right-arrow ${index === totalLotsInGroup - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
         </h3>
       </div>
       <div class="max-container">
-        <p>Max Capacity: <span id="max${lotId}">${max}</span><span class="edit-icon" id="editMaxIcon${lotId}" onclick="editMax('${lotId}')">✎</span></p>
+        <p>Max Capacity: <span id="max${lotId}" class="editable" onclick="editMax('${lotId}')">${max}</span></p>
       </div>
       <div class="spaces-container">
-        <p class="filled-spaces">Filled Spaces: <span id="${lotId}">${filled}</span><span class="edit-icon" id="editSpacesIcon${lotId}" onclick="editSpaces('${lotId}')">✎</span></p>
+        <p class="filled-spaces">Filled Spaces: <span id="${lotId}" class="editable" onclick="editSpaces('${lotId}')">${filled}</span></p>
       </div>
       <div class="button-group">
         <button onclick="updateSpaces('${lotId}', 1)">+</button>
@@ -67,9 +66,8 @@ function renderLots(lots) {
     groupDiv.innerHTML = `
       <div class="group-header">
         <span class="collapse-toggle" onclick="toggleGroup(this)">▼</span>
-        <span class="group-name" id="group-${groupName}">${groupName}</span>
+        <span class="group-name editable" id="group-${groupName}" onclick="editGroupName('${groupName}')">${groupName}</span>
         <span class="group-capacity"> ${groupFilled}/${groupMax} (${groupPercentage}%)</span>
-        <span class="edit-icon" id="editGroupIcon-${groupName}" onclick="editGroupName('${groupName}')">✎</span>
       </div>
       <div class="group-lots">
         ${groupLots.map((lot, index) => renderLot(lot.lotId, lot.name, lot.filled, lot.max, index, groupLots.length)).join("")}
@@ -94,7 +92,6 @@ function toggleGroup(toggle) {
 // Edit group name
 function editGroupName(groupName) {
   const groupSpan = document.getElementById(`group-${groupName}`);
-  const editIcon = document.getElementById(`editGroupIcon-${groupName}`);
   const currentName = groupSpan.textContent;
   const input = document.createElement("input");
   input.type = "text";
@@ -104,10 +101,10 @@ function editGroupName(groupName) {
     const newName = input.value.trim() || currentName;
     const newSpan = document.createElement("span");
     newSpan.id = `group-${newName}`;
-    newSpan.className = "group-name";
+    newSpan.className = "group-name editable";
     newSpan.textContent = newName;
+    newSpan.onclick = () => editGroupName(newName); // Reattach onclick
     input.parentNode.replaceChild(newSpan, input);
-    editIcon.style.display = "inline";
     const lots = getCurrentLots();
     Object.values(lots).forEach((lot) => {
       if (lot.group === groupName) lot.group = newName;
@@ -121,7 +118,6 @@ function editGroupName(groupName) {
     if (e.key === "Enter") input.blur();
   };
   groupSpan.parentNode.replaceChild(input, groupSpan);
-  editIcon.style.display = "none";
   input.focus();
 }
 
@@ -159,7 +155,6 @@ function updateFullPercentage(lots) {
 // Edit lot name
 function editName(lotId) {
   const nameSpan = document.getElementById(`name${lotId}`);
-  const editIcon = document.getElementById(`editNameIcon${lotId}`);
   const currentName = nameSpan.textContent;
   const input = document.createElement("input");
   input.type = "text";
@@ -169,17 +164,16 @@ function editName(lotId) {
     const newName = input.value.trim() || lotId.toUpperCase();
     const newSpan = document.createElement("span");
     newSpan.id = `name${lotId}`;
-    newSpan.className = "lot-name";
+    newSpan.className = "lot-name editable";
     newSpan.textContent = newName;
+    newSpan.onclick = () => editName(lotId); // Reattach onclick
     input.parentNode.replaceChild(newSpan, input);
-    editIcon.style.display = "inline";
     socket.emit("rename", { lot: lotId, name: newName });
   };
   input.onkeypress = (e) => {
     if (e.key === "Enter") input.blur();
   };
   nameSpan.parentNode.replaceChild(input, nameSpan);
-  editIcon.style.display = "none";
   input.focus();
 }
 
@@ -187,7 +181,6 @@ function editName(lotId) {
 function editSpaces(lotId) {
   const filledSpan = document.getElementById(lotId);
   const maxSpan = document.getElementById(`max${lotId}`);
-  const editIcon = document.getElementById(`editSpacesIcon${lotId}`);
   const currentFilled = parseInt(filledSpan.textContent);
   const maxCapacity = parseInt(maxSpan.textContent);
   const input = document.createElement("input");
@@ -203,23 +196,22 @@ function editSpaces(lotId) {
     );
     const newSpan = document.createElement("span");
     newSpan.id = lotId;
+    newSpan.className = "editable";
     newSpan.textContent = newFilled;
+    newSpan.onclick = () => editSpaces(lotId); // Reattach onclick
     input.parentNode.replaceChild(newSpan, input);
-    editIcon.style.display = "inline";
     socket.emit("update", { lot: lotId, filled: newFilled });
   };
   input.onkeypress = (e) => {
     if (e.key === "Enter") input.blur();
   };
   filledSpan.parentNode.replaceChild(input, filledSpan);
-  editIcon.style.display = "none";
   input.focus();
 }
 
 // Edit max capacity
 function editMax(lotId) {
   const maxSpan = document.getElementById(`max${lotId}`);
-  const editIcon = document.getElementById(`editMaxIcon${lotId}`);
   const currentMax = parseInt(maxSpan.textContent);
   const input = document.createElement("input");
   input.type = "number";
@@ -230,16 +222,16 @@ function editMax(lotId) {
     const newMax = Math.max(0, parseInt(input.value) || 0);
     const newSpan = document.createElement("span");
     newSpan.id = `max${lotId}`;
+    newSpan.className = "editable";
     newSpan.textContent = newMax;
+    newSpan.onclick = () => editMax(lotId); // Reattach onclick
     input.parentNode.replaceChild(newSpan, input);
-    editIcon.style.display = "inline";
     socket.emit("updateMax", { lot: lotId, max: newMax });
   };
   input.onkeypress = (e) => {
     if (e.key === "Enter") input.blur();
   };
   maxSpan.parentNode.replaceChild(input, maxSpan);
-  editIcon.style.display = "none";
   input.focus();
 }
 
