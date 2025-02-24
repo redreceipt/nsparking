@@ -7,7 +7,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Use the Redis URL from the environment variable
 const redisClient = redis.createClient({
   url: process.env.REDIS_URL || "redis://localhost:6379",
   ...(process.env.REDIS_URL && {
@@ -30,13 +29,12 @@ redisClient
     app.use(express.static("public"));
 
     let parkingLots = {
-      lotA: { spaces: 10, name: "Lot A", max: 10 },
-      lotB: { spaces: 10, name: "Lot B", max: 10 },
-      lotC: { spaces: 10, name: "Lot C", max: 10 },
-      lotD: { spaces: 10, name: "Lot D", max: 10 },
+      lotA: { filled: 0, name: "Lot A", max: 10 },
+      lotB: { filled: 0, name: "Lot B", max: 10 },
+      lotC: { filled: 0, name: "Lot C", max: 10 },
+      lotD: { filled: 0, name: "Lot D", max: 10 },
     };
 
-    // Load state from Redis on startup
     const data = await redisClient.get("parkingLots");
     if (data) {
       parkingLots = JSON.parse(data);
@@ -61,13 +59,13 @@ redisClient
 
       socket.on("update", (data) => {
         if (parkingLots[data.lot]) {
-          parkingLots[data.lot].spaces = Math.min(
+          parkingLots[data.lot].filled = Math.min(
             parkingLots[data.lot].max,
-            Math.max(0, data.spaces),
+            Math.max(0, data.filled),
           ); // Cap at max
           io.emit("update", {
             lot: data.lot,
-            spaces: parkingLots[data.lot].spaces,
+            filled: parkingLots[data.lot].filled,
           });
           saveState();
         }
@@ -75,7 +73,7 @@ redisClient
 
       socket.on("reset", () => {
         Object.keys(parkingLots).forEach((lot) => {
-          parkingLots[lot].spaces = parkingLots[lot].max;
+          parkingLots[lot].filled = 0; // Reset to empty (0 filled)
         });
         io.emit("reset", parkingLots);
         saveState();
@@ -92,14 +90,14 @@ redisClient
       socket.on("updateMax", (data) => {
         if (parkingLots[data.lot]) {
           parkingLots[data.lot].max = data.max;
-          parkingLots[data.lot].spaces = Math.min(
-            parkingLots[data.lot].spaces,
+          parkingLots[data.lot].filled = Math.min(
+            parkingLots[data.lot].filled,
             data.max,
-          ); // Adjust spaces if needed
+          ); // Adjust filled if needed
           io.emit("updateMax", { lot: data.lot, max: data.max });
           io.emit("update", {
             lot: data.lot,
-            spaces: parkingLots[data.lot].spaces,
+            filled: parkingLots[data.lot].filled,
           });
           saveState();
         }
@@ -108,7 +106,7 @@ redisClient
       socket.on("addLot", () => {
         const newLotId = getNextLotId();
         parkingLots[newLotId] = {
-          spaces: 10,
+          filled: 0,
           name: `Lot ${newLotId.charAt(3)}`,
           max: 10,
         };

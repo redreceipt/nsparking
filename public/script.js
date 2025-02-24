@@ -1,9 +1,12 @@
 const socket = io();
+console.log("Socket initialized");
 const lotsContainer = document.getElementById("lots");
 const fullPercentageSpan = document.getElementById("full-percentage");
+console.log("DOM elements loaded:", lotsContainer, fullPercentageSpan);
 
 // Render a single lot
-function renderLot(lotId, name, spaces, max) {
+function renderLot(lotId, name, filled, max) {
+  console.log(`Rendering lot ${lotId}: ${name}, ${filled}/${max}`);
   const lotDiv = document.createElement("div");
   lotDiv.className = "lot";
   lotDiv.innerHTML = `
@@ -14,7 +17,7 @@ function renderLot(lotId, name, spaces, max) {
             <p>Max Capacity: <span id="max${lotId}">${max}</span><span class="edit-icon" id="editMaxIcon${lotId}" onclick="editMax('${lotId}')">✎</span></p>
         </div>
         <div class="spaces-container">
-            <p class="empty-spaces">Empty Spaces: <span id="${lotId}">${spaces}</span><span class="edit-icon" id="editSpacesIcon${lotId}" onclick="editSpaces('${lotId}')">✎</span></p>
+            <p class="filled-spaces">Filled Spaces: <span id="${lotId}">${filled}</span><span class="edit-icon" id="editSpacesIcon${lotId}" onclick="editSpaces('${lotId}')">✎</span></p>
         </div>
         <div class="button-group">
             <button onclick="updateSpaces('${lotId}', 1)">+</button>
@@ -27,9 +30,10 @@ function renderLot(lotId, name, spaces, max) {
 
 // Clear and re-render all lots
 function renderLots(lots) {
+  console.log("Rendering lots:", lots);
   lotsContainer.innerHTML = "";
   Object.keys(lots).forEach((lotId) => {
-    renderLot(lotId, lots[lotId].name, lots[lotId].spaces, lots[lotId].max);
+    renderLot(lotId, lots[lotId].name, lots[lotId].filled, lots[lotId].max);
   });
   updateFullPercentage(lots);
 }
@@ -37,12 +41,12 @@ function renderLots(lots) {
 // Update full lot percentage
 function updateFullPercentage(lots) {
   const totalMax = Object.values(lots).reduce((sum, lot) => sum + lot.max, 0);
-  const totalOccupied = Object.values(lots).reduce(
-    (sum, lot) => sum + (lot.max - lot.spaces),
+  const totalFilled = Object.values(lots).reduce(
+    (sum, lot) => sum + lot.filled,
     0,
   );
   const percentage =
-    totalMax > 0 ? Math.round((totalOccupied / totalMax) * 100) : 0;
+    totalMax > 0 ? Math.round((totalFilled / totalMax) * 100) : 0;
   fullPercentageSpan.textContent = `${percentage}%`;
 }
 
@@ -72,35 +76,35 @@ function editName(lotId) {
   input.focus();
 }
 
-// Edit lot spaces
+// Edit lot spaces (now filled spaces)
 function editSpaces(lotId) {
-  const spacesSpan = document.getElementById(lotId);
+  const filledSpan = document.getElementById(lotId);
   const maxSpan = document.getElementById(`max${lotId}`);
   const editIcon = document.getElementById(`editSpacesIcon${lotId}`);
-  const currentSpaces = parseInt(spacesSpan.textContent);
+  const currentFilled = parseInt(filledSpan.textContent);
   const maxCapacity = parseInt(maxSpan.textContent);
   const input = document.createElement("input");
   input.type = "number";
   input.className = "edit-input-number";
-  input.value = currentSpaces;
+  input.value = currentFilled;
   input.min = "0";
-  input.max = maxCapacity; // Set max attribute for HTML validation
+  input.max = maxCapacity;
   input.onblur = () => {
-    const newSpaces = Math.min(
+    const newFilled = Math.min(
       maxCapacity,
       Math.max(0, parseInt(input.value) || 0),
-    ); // Cap at maxCapacity
+    );
     const newSpan = document.createElement("span");
     newSpan.id = lotId;
-    newSpan.textContent = newSpaces;
+    newSpan.textContent = newFilled;
     input.parentNode.replaceChild(newSpan, input);
     editIcon.style.display = "inline";
-    socket.emit("update", { lot: lotId, spaces: newSpaces });
+    socket.emit("update", { lot: lotId, filled: newFilled });
   };
   input.onkeypress = (e) => {
     if (e.key === "Enter") input.blur();
   };
-  spacesSpan.parentNode.replaceChild(input, spacesSpan);
+  filledSpan.parentNode.replaceChild(input, filledSpan);
   editIcon.style.display = "none";
   input.focus();
 }
@@ -132,17 +136,17 @@ function editMax(lotId) {
   input.focus();
 }
 
-// Increment or decrement spaces
+// Increment or decrement filled spaces
 function updateSpaces(lotId, change) {
-  const currentSpaces = parseInt(document.getElementById(lotId).textContent);
+  const currentFilled = parseInt(document.getElementById(lotId).textContent);
   const maxCapacity = parseInt(
     document.getElementById(`max${lotId}`).textContent,
   );
-  const newSpaces = Math.min(maxCapacity, Math.max(0, currentSpaces + change)); // Cap at maxCapacity
-  socket.emit("update", { lot: lotId, spaces: newSpaces });
+  const newFilled = Math.min(maxCapacity, Math.max(0, currentFilled + change));
+  socket.emit("update", { lot: lotId, filled: newFilled });
 }
 
-// Reset all to max
+// Reset all to empty (0 filled)
 function resetAll() {
   socket.emit("reset");
 }
@@ -159,13 +163,14 @@ function removeLot(lotId) {
 
 // Handle initial state and updates from server
 socket.on("state", (lots) => {
+  console.log("Received state:", lots);
   renderLots(lots);
 });
 
 socket.on("update", (data) => {
-  const spacesElement = document.getElementById(data.lot);
-  if (spacesElement && spacesElement.tagName !== "INPUT") {
-    spacesElement.textContent = data.spaces;
+  const filledElement = document.getElementById(data.lot);
+  if (filledElement && filledElement.tagName !== "INPUT") {
+    filledElement.textContent = data.filled;
     updateFullPercentage(getCurrentLots());
   }
 });
@@ -186,6 +191,7 @@ socket.on("updateMax", (data) => {
 });
 
 socket.on("addLot", (lots) => {
+  console.log("Received addLot:", lots);
   renderLots(lots);
 });
 
@@ -204,7 +210,7 @@ function getCurrentLots() {
     const lotId = lotDiv.querySelector('[id^="name"]').id.replace("name", "");
     lots[lotId] = {
       name: document.getElementById(`name${lotId}`).textContent,
-      spaces: parseInt(document.getElementById(lotId).textContent),
+      filled: parseInt(document.getElementById(lotId).textContent),
       max: parseInt(document.getElementById(`max${lotId}`).textContent),
     };
   });

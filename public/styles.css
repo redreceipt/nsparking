@@ -60,7 +60,7 @@ p {
   margin: 10px 0;
   display: block;
 }
-.empty-spaces {
+.filled-spaces {
   font-size: 20px; /* Larger text */
   font-weight: bold; /* Emphasis */
 }
