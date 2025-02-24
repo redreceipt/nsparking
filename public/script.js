@@ -23,6 +23,10 @@ function renderLot(lotId, name, filled, max) {
             <button onclick="updateSpaces('${lotId}', 1)">+</button>
             <button onclick="updateSpaces('${lotId}', -1)">-</button>
         </div>
+        <div class="shortcut-buttons">
+            <button class="shortcut-button" onclick="setFull('${lotId}')">Full</button>
+            <button class="shortcut-button" onclick="setEmpty('${lotId}')">Empty</button>
+        </div>
         <button class="remove-button" onclick="removeLot('${lotId}')">Remove</button>
     `;
   lotsContainer.appendChild(lotDiv);
@@ -76,7 +80,7 @@ function editName(lotId) {
   input.focus();
 }
 
-// Edit lot spaces (now filled spaces)
+// Edit lot spaces (filled spaces)
 function editSpaces(lotId) {
   const filledSpan = document.getElementById(lotId);
   const maxSpan = document.getElementById(`max${lotId}`);
@@ -146,9 +150,17 @@ function updateSpaces(lotId, change) {
   socket.emit("update", { lot: lotId, filled: newFilled });
 }
 
-// Reset all to empty (0 filled)
-function resetAll() {
-  socket.emit("reset");
+// Set lot to full
+function setFull(lotId) {
+  const maxCapacity = parseInt(
+    document.getElementById(`max${lotId}`).textContent,
+  );
+  socket.emit("update", { lot: lotId, filled: maxCapacity });
+}
+
+// Set lot to empty
+function setEmpty(lotId) {
+  socket.emit("update", { lot: lotId, filled: 0 });
 }
 
 // Add a new lot

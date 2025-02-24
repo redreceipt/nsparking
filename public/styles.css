@@ -35,6 +35,34 @@ button {
   color: #666;
   border-radius: 4px;
 }
+.shortcut-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.shortcut-button {
+  font-size: 16px;
+  padding: 6px 12px;
+  margin: 4px;
+  min-width: 0;
+  background-color: #e0e0e0;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+#add-lot-container {
+  text-align: center;
+  margin-top: 20px;
+}
+#add-lot-btn {
+  font-size: 14px; /* Smaller than main buttons */
+  padding: 6px 12px;
+  margin: 0;
+  min-width: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  color: #666;
+  border-radius: 4px;
+}
 .edit-icon {
   font-size: 16px;
   margin-left: 8px;
@@ -61,8 +89,8 @@ p {
   display: block;
 }
 .filled-spaces {
-  font-size: 20px; /* Larger text */
-  font-weight: bold; /* Emphasis */
+  font-size: 20px;
+  font-weight: bold;
 }
 .name-container,
 .spaces-container,
