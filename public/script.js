@@ -21,10 +21,10 @@ function renderLot(lotId, name, filled, max, index, totalLots) {
   lotDiv.innerHTML = `
         <div class="name-container">
             <h2>
-              <span class="arrow-icon ${index === 0 ? "disabled" : ""}" onclick="moveLotUp('${lotId}')">◄</span>
-              <span id="name${lotId}">${name}</span>
+              <span class="arrow-icon left-arrow ${index === 0 ? "disabled" : ""}" onclick="moveLotUp('${lotId}')">◄</span>
+              <span class="lot-name" id="name${lotId}">${name}</span>
               <span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span>
-              <span class="arrow-icon ${index === totalLots - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
+              <span class="arrow-icon right-arrow ${index === totalLots - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
             </h2>
         </div>
         <div class="max-container">
@@ -90,6 +90,7 @@ function editName(lotId) {
     const newName = input.value.trim() || lotId.toUpperCase();
     const newSpan = document.createElement("span");
     newSpan.id = `name${lotId}`;
+    newSpan.className = "lot-name"; // Keep class for styling
     newSpan.textContent = newName;
     input.parentNode.replaceChild(newSpan, input);
     editIcon.style.display = "inline";
@@ -254,7 +255,7 @@ socket.on("update", (data) => {
 });
 
 socket.on("rename", (data) => {
-  const nameElement = document.getElementById(`name${lotId}`);
+  const nameElement = document.getElementById(`name${data.lot}`); // Fixed typo: lotId → data.lot
   if (nameElement && nameElement.tagName !== "INPUT") {
     nameElement.textContent = data.name;
   }

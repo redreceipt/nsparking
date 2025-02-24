@@ -63,14 +63,35 @@ button {
   color: #666;
   border-radius: 4px;
 }
+.name-container {
+  position: relative; /* Anchor arrows relative to this */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 24px; /* Ensure height for arrows */
+}
+.lot-name {
+  max-width: 140px; /* Limit name width to fit arrows */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Truncate long names */
+  white-space: nowrap;
+}
 .arrow-icon {
-  font-size: 12px; /* Smaller than buttons */
-  margin: 0 6px; /* Slightly tighter spacing */
-  color: #888; /* Subtle gray */
+  font-size: 12px;
+  color: #888;
   cursor: pointer;
+  position: absolute; /* Fix position */
+  top: 50%;
+  transform: translateY(-50%); /* Center vertically */
+}
+.arrow-icon.left-arrow {
+  left: 0; /* Anchor to left edge */
+}
+.arrow-icon.right-arrow {
+  right: 0; /* Anchor to right edge */
 }
 .arrow-icon.disabled {
-  color: #ccc; /* Lighter gray when disabled */
+  color: #ccc;
   cursor: not-allowed;
 }
 .edit-icon {
