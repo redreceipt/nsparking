@@ -10,6 +10,12 @@ const io = new Server(server);
 // Use the Redis URL from the environment variable
 const redisClient = redis.createClient({
   url: process.env.REDIS_URL || "redis://localhost:6379",
+  ...(process.env.REDIS_URL && {
+    socket: {
+      tls: true,
+      rejectUnauthorized: false,
+    },
+  }),
 });
 
 redisClient.on("error", (err) => {
