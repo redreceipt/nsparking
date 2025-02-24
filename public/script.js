@@ -6,9 +6,7 @@ function renderLot(lotId, name, spaces) {
   const lotDiv = document.createElement("div");
   lotDiv.className = "lot";
   lotDiv.innerHTML = `
-        <h2><span id="name${lotId}">${name}</span></h2>
-        <input type="text" id="rename${lotId}" placeholder="Rename ${name}">
-        <button onclick="renameLot('${lotId}')">Rename</button>
+        <h2><span id="name${lotId}">${name}</span><span class="edit-icon" onclick="editName('${lotId}')">✎</span></h2>
         <p>Empty Spaces: <span id="${lotId}">${spaces}</span></p>
         <button onclick="updateSpaces('${lotId}', 1)">+</button>
         <button onclick="updateSpaces('${lotId}', -1)">-</button>
@@ -25,6 +23,33 @@ function renderLots(lots) {
   Object.keys(lots).forEach((lotId) => {
     renderLot(lotId, lots[lotId].name, lots[lotId].spaces);
   });
+}
+
+// Edit lot name
+function editName(lotId) {
+  const nameSpan = document.getElementById(`name${lotId}`);
+  const currentName = nameSpan.textContent;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "edit-input";
+  input.value = currentName;
+  input.onblur = () => {
+    const newName = input.value.trim() || lotId.toUpperCase();
+    // Replace input with span locally first
+    const newSpan = document.createElement("span");
+    newSpan.id = `name${lotId}`;
+    newSpan.textContent = newName;
+    input.parentNode.replaceChild(newSpan, input);
+    // Then send to server
+    socket.emit("rename", { lot: lotId, name: newName });
+  };
+  input.onkeypress = (e) => {
+    if (e.key === "Enter") {
+      input.blur(); // Trigger blur to save
+    }
+  };
+  nameSpan.parentNode.replaceChild(input, nameSpan);
+  input.focus();
 }
 
 // Increment or decrement spaces
@@ -47,14 +72,6 @@ function resetAll() {
   socket.emit("reset");
 }
 
-// Rename a lot
-function renameLot(lotId) {
-  const input = document.getElementById(`rename${lotId}`);
-  const newName = input.value.trim() || lotId.toUpperCase();
-  socket.emit("rename", { lot: lotId, name: newName });
-  input.value = "";
-}
-
 // Add a new lot
 function addLot() {
   socket.emit("addLot");
@@ -75,7 +92,11 @@ socket.on("update", (data) => {
 });
 
 socket.on("rename", (data) => {
-  document.getElementById(`name${data.lot}`).textContent = data.name;
+  const nameElement = document.getElementById(`name${data.lot}`);
+  if (nameElement && nameElement.tagName !== "INPUT") {
+    // Only update if not currently editing
+    nameElement.textContent = data.name;
+  }
 });
 
 socket.on("addLot", (lots) => {
