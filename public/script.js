@@ -57,12 +57,18 @@ function renderLots(lots) {
 
   // Render each group
   Object.entries(groups).forEach(([groupName, groupLots]) => {
+    const groupMax = groupLots.reduce((sum, lot) => sum + lot.max, 0);
+    const groupFilled = groupLots.reduce((sum, lot) => sum + lot.filled, 0);
+    const groupPercentage =
+      groupMax > 0 ? Math.round((groupFilled / groupMax) * 100) : 0;
+
     const groupDiv = document.createElement("div");
     groupDiv.className = "group";
     groupDiv.innerHTML = `
       <div class="group-header">
         <span class="collapse-toggle" onclick="toggleGroup(this)">▼</span>
         <span class="group-name" id="group-${groupName}">${groupName}</span>
+        <span class="group-capacity"> ${groupFilled}/${groupMax} (${groupPercentage}%)</span>
         <span class="edit-icon" id="editGroupIcon-${groupName}" onclick="editGroupName('${groupName}')">✎</span>
       </div>
       <div class="group-lots">
@@ -138,7 +144,7 @@ function addGroup() {
   socket.emit("addLot", { group: newGroupName });
 }
 
-// Update full lot percentage
+// Update total capacity display
 function updateFullPercentage(lots) {
   const totalMax = Object.values(lots).reduce((sum, lot) => sum + lot.max, 0);
   const totalFilled = Object.values(lots).reduce(
@@ -147,7 +153,7 @@ function updateFullPercentage(lots) {
   );
   const percentage =
     totalMax > 0 ? Math.round((totalFilled / totalMax) * 100) : 0;
-  fullPercentageSpan.textContent = `${percentage}%`;
+  fullPercentageSpan.textContent = `${totalFilled}/${totalMax} (${percentage}%)`;
 }
 
 // Edit lot name

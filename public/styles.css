@@ -26,7 +26,12 @@ body {
 .group-name {
   font-size: 18px;
   font-weight: bold;
-  margin: 0 10px;
+  margin: 0 5px; /* Adjusted for tighter fit */
+}
+.group-capacity {
+  font-size: 14px;
+  color: #666; /* Subtle gray */
+  margin-left: 5px;
 }
 .collapse-toggle {
   font-size: 14px;
