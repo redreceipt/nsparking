@@ -1,17 +1,31 @@
-const socket = io();
+const socket = io({
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+});
 console.log("Socket initialized");
 const lotsContainer = document.getElementById("lots");
 const fullPercentageSpan = document.getElementById("full-percentage");
 console.log("DOM elements loaded:", lotsContainer, fullPercentageSpan);
 
-// Render a single lot
-function renderLot(lotId, name, filled, max) {
-  console.log(`Rendering lot ${lotId}: ${name}, ${filled}/${max}`);
+socket.on("connect", () => console.log("Socket connected to server"));
+socket.on("disconnect", () => console.log("Socket disconnected from server"));
+
+// Render a single lot with reorder arrows as icons
+function renderLot(lotId, name, filled, max, index, totalLots) {
+  console.log(
+    `Rendering lot ${lotId}: ${name}, ${filled}/${max}, index: ${index}`,
+  );
   const lotDiv = document.createElement("div");
   lotDiv.className = "lot";
   lotDiv.innerHTML = `
         <div class="name-container">
-            <h2><span id="name${lotId}">${name}</span><span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span></h2>
+            <h2>
+              <span class="arrow-icon ${index === 0 ? "disabled" : ""}" onclick="moveLotUp('${lotId}')">◄</span>
+              <span id="name${lotId}">${name}</span>
+              <span class="edit-icon" id="editNameIcon${lotId}" onclick="editName('${lotId}')">✎</span>
+              <span class="arrow-icon ${index === totalLots - 1 ? "disabled" : ""}" onclick="moveLotDown('${lotId}')">►</span>
+            </h2>
         </div>
         <div class="max-container">
             <p>Max Capacity: <span id="max${lotId}">${max}</span><span class="edit-icon" id="editMaxIcon${lotId}" onclick="editMax('${lotId}')">✎</span></p>
@@ -36,10 +50,19 @@ function renderLot(lotId, name, filled, max) {
 function renderLots(lots) {
   console.log("Rendering lots:", lots);
   lotsContainer.innerHTML = "";
-  Object.keys(lots).forEach((lotId) => {
-    renderLot(lotId, lots[lotId].name, lots[lotId].filled, lots[lotId].max);
+  const lotIds = Object.keys(lots);
+  lotIds.forEach((lotId, index) => {
+    renderLot(
+      lotId,
+      lots[lotId].name,
+      lots[lotId].filled,
+      lots[lotId].max,
+      index,
+      lotIds.length,
+    );
   });
   updateFullPercentage(lots);
+  console.log("Lots rendered, current order:", lotIds);
 }
 
 // Update full lot percentage
@@ -163,6 +186,49 @@ function setEmpty(lotId) {
   socket.emit("update", { lot: lotId, filled: 0 });
 }
 
+// Move lot up (left)
+function moveLotUp(lotId) {
+  console.log(`Moving ${lotId} up`);
+  const lots = getCurrentLots();
+  const lotIds = Object.keys(lots);
+  const index = lotIds.indexOf(lotId);
+  if (index > 0) {
+    const newLotIds = [...lotIds];
+    [newLotIds[index], newLotIds[index - 1]] = [
+      newLotIds[index - 1],
+      newLotIds[index],
+    ];
+    const reorderedLots = {};
+    newLotIds.forEach((id) => (reorderedLots[id] = lots[id]));
+    console.log("Emitting reorder (up):", reorderedLots);
+    socket.emit("reorder", reorderedLots);
+  } else {
+    console.log(`${lotId} already at top`);
+  }
+}
+
+// Move lot down (right)
+function moveLotDown(lotId) {
+  console.log(`Moving ${lotId} down`);
+  const lots = getCurrentLots();
+  const lotIds = Object.keys(lots);
+  const index = lotIds.indexOf(lotId);
+  if (index < lotIds.length - 1) {
+    const newLotIds = [...lotIds];
+    [newLotIds[index], newLotIds[index + 1]] = [
+      newLotIds[index + 1],
+      newLotIds[index],
+    ];
+    const reorderedLots = {};
+    newLotIds.forEach((id) => (reorderedLots[id] = lots[id]));
+    console.log("Socket connected:", socket.connected);
+    console.log("Emitting reorder (down):", reorderedLots);
+    socket.emit("reorder", reorderedLots);
+  } else {
+    console.log(`${lotId} already at bottom`);
+  }
+}
+
 // Add a new lot
 function addLot() {
   socket.emit("addLot");
@@ -188,7 +254,7 @@ socket.on("update", (data) => {
 });
 
 socket.on("rename", (data) => {
-  const nameElement = document.getElementById(`name${data.lot}`);
+  const nameElement = document.getElementById(`name${lotId}`);
   if (nameElement && nameElement.tagName !== "INPUT") {
     nameElement.textContent = data.name;
   }
@@ -211,7 +277,8 @@ socket.on("removeLot", (lots) => {
   renderLots(lots);
 });
 
-socket.on("reset", (lots) => {
+socket.on("reorder", (lots) => {
+  console.log("Received reorder:", lots);
   renderLots(lots);
 });
 
