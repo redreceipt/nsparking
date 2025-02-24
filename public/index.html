@@ -8,30 +8,47 @@
   </head>
   <body>
     <h1>Parking Lot Tracker</h1>
+    <button onclick="resetAll()">Reset All to Empty</button>
     <div id="lots">
       <div class="lot">
-        <h2>Lot A</h2>
+        <h2><span id="nameLotA">Lot A</span></h2>
+        <input type="text" id="renameLotA" placeholder="Rename Lot A" />
+        <button onclick="renameLot('lotA')">Rename</button>
         <p>Empty Spaces: <span id="lotA">10</span></p>
         <button onclick="updateSpaces('lotA', 1)">+</button>
         <button onclick="updateSpaces('lotA', -1)">-</button>
+        <input type="number" id="setLotA" min="0" placeholder="Set spaces" />
+        <button onclick="setSpaces('lotA')">Set</button>
       </div>
       <div class="lot">
-        <h2>Lot B</h2>
+        <h2><span id="nameLotB">Lot B</span></h2>
+        <input type="text" id="renameLotB" placeholder="Rename Lot B" />
+        <button onclick="renameLot('lotB')">Rename</button>
         <p>Empty Spaces: <span id="lotB">10</span></p>
         <button onclick="updateSpaces('lotB', 1)">+</button>
         <button onclick="updateSpaces('lotB', -1)">-</button>
+        <input type="number" id="setLotB" min="0" placeholder="Set spaces" />
+        <button onclick="setSpaces('lotB')">Set</button>
       </div>
       <div class="lot">
-        <h2>Lot C</h2>
+        <h2><span id="nameLotC">Lot C</span></h2>
+        <input type="text" id="renameLotC" placeholder="Rename Lot C" />
+        <button onclick="renameLot('lotC')">Rename</button>
         <p>Empty Spaces: <span id="lotC">10</span></p>
         <button onclick="updateSpaces('lotC', 1)">+</button>
         <button onclick="updateSpaces('lotC', -1)">-</button>
+        <input type="number" id="setLotC" min="0" placeholder="Set spaces" />
+        <button onclick="setSpaces('lotC')">Set</button>
       </div>
       <div class="lot">
-        <h2>Lot D</h2>
+        <h2><span id="nameLotD">Lot D</span></h2>
+        <input type="text" id="renameLotD" placeholder="Rename Lot D" />
+        <button onclick="renameLot('lotD')">Rename</button>
         <p>Empty Spaces: <span id="lotD">10</span></p>
         <button onclick="updateSpaces('lotD', 1)">+</button>
         <button onclick="updateSpaces('lotD', -1)">-</button>
+        <input type="number" id="setLotD" min="0" placeholder="Set spaces" />
+        <button onclick="setSpaces('lotD')">Set</button>
       </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
