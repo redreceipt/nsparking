@@ -22,18 +22,18 @@ button {
   min-width: 60px;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #f0f0f0; /* Light gray for main buttons */
+  background-color: #f0f0f0;
   border: 1px solid #ccc;
 }
 .remove-button {
-  font-size: 14px; /* Smaller text */
-  padding: 6px 12px; /* Reduced padding */
+  font-size: 14px;
+  padding: 6px 12px;
   margin: 8px;
-  min-width: 0; /* Allow it to shrink */
-  background-color: #fff; /* White to blend in */
-  border: 1px solid #ddd; /* Lighter border */
-  color: #666; /* Muted text color */
-  border-radius: 4px; /* Slightly smaller radius */
+  min-width: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  color: #666;
+  border-radius: 4px;
 }
 .edit-icon {
   font-size: 16px;
@@ -60,8 +60,13 @@ p {
   margin: 10px 0;
   display: block;
 }
+.empty-spaces {
+  font-size: 20px; /* Larger text */
+  font-weight: bold; /* Emphasis */
+}
 .name-container,
-.spaces-container {
+.spaces-container,
+.max-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -70,4 +75,10 @@ p {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+#lot-stats {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 10px 0;
+  color: #333;
 }
